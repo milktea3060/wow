@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popcat</title>
+    <title>Popcat Custom</title>
     <style>
         body {
             margin: 0;
@@ -14,13 +14,16 @@
             align-items: center;
             background-color: #ffffff;
             color: #141414;
-            font-family: "굴림", Gulim, "맑은 고딕", "Malgun Gothic", sans-serif;
+            font-family: "굴림", Gulim, "맑은 고딕", sans-serif;
             user-select: none;
             -webkit-user-select: none;
+            overflow: hidden;
+            position: relative;
         }
         h1 {
             font-size: 5rem;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
+            z-index: 10;
         }
         img {
             max-width: 400px;
@@ -28,35 +31,194 @@
             cursor: pointer;
             -webkit-user-drag: none;
             -webkit-touch-callout: none;
+            z-index: 10;
+        }
+        .controls {
+            margin-top: 20px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 1rem;
+        }
+        input {
+            width: 70px;
+            padding: 5px;
+            text-align: center;
+            font-family: inherit;
+        }
+        button {
+            padding: 6px 14px;
+            font-family: inherit;
+            cursor: pointer;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #e0e0e0;
+        }
+        #popup-text {
+            position: fixed;
+            top: 20%;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff3366;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border: 2px solid #ff3366;
+            border-radius: 10px;
+            display: none;
+            z-index: 100;
+            white-space: pre-wrap;
+            text-align: center;
+        }
+        .particle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: burst 1s ease-out forwards;
+            z-index: 50;
+        }
+        @keyframes burst {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0.5);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
 
+    <div id="popup-text">you are 67<br><span id="ascii-art" style="font-size: 0.7rem; line-height: 1.1; display:inline-block; margin-top:5px;"></span></div>
+
     <h1 id="count">0</h1>
+    
     <img id="popcat" src="closed.png" alt="Popcat" 
-         onmousedown="openMouth()" 
-         onmouseup="closeMouth()" 
-         onmouseleave="closeMouth()"
-         ontouchstart="openMouth()" 
-         ontouchend="closeMouth()">
+         onmousedown="triggerPop(true)" 
+         onmouseup="triggerPop(false)" 
+         onmouseleave="triggerPop(false)"
+         ontouchstart="triggerPop(true)" 
+         ontouchend="triggerPop(false)">
+
+    <div class="controls">
+        <label for="interval">클릭 간격(ms):</label>
+        <input type="number" id="interval" value="100" min="10" step="10">
+        <button id="auto-btn" onclick="toggleAutoClick()">자동 클릭 시작</button>
+    </div>
 
     <script>
         let score = 0;
+        let hasShown67 = false;
+        let isAutoRunning = false;
+        let autoTimer = null;
+
         const countDisplay = document.getElementById('count');
         const catImage = document.getElementById('popcat');
+        const popupText = document.getElementById('popup-text');
+        const asciiSpan = document.getElementById('ascii-art');
+        const autoBtn = document.getElementById('auto-btn');
+        const intervalInput = document.getElementById('interval');
+
+        const rawAscii = `⠀⠀⢀⠤⣂⣤⣬⣭⣭⣭⣔⡠⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠔⣵⣾⣿⣿⣿⢿⣿⣿⣿⣿⣎⢂⠀⢲⣤⣤⣤⣤⣀⣒⣒⣒⣒⣂⡠⠤⠤⣄
+⠐⣾⣿⣿⣿⡏⣾⡿⢎⣛⣫⣭⣴⣾⠆⢸⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⢼
+⡇⣿⣿⣿⣿⣟⡿⢀⣐⣻⣛⡩⢁⠀⠀⣘⣛⣛⡛⠿⠿⠿⢿⣿⣿⣿⣿⣿⢟⣾
+⡇⣿⣿⣿⣿⣷⣾⣿⣿⣿⣿⣿⣶⡕⠄⠉⠛⠛⠛⠛⡻⣣⣾⣿⣿⣿⢟⣵⣿⠛
+⠃⣿⣿⣿⣿⣿⢋⣥⠭⡻⣿⣿⣿⣿⡌⡄⠀⠀⠀⡐⣼⣿⣿⣿⡿⣣⣾⠏⠀⠀
+⠨⢻⣿⣿⣿⣧⢻⠁⠀⠘⢸⣿⣿⣿⡇⣿⠀⠀⠌⣼⣿⣿⣿⡿⢱⣿⠃⠀⠀⠀
+⠀⢦⢻⣿⣿⣿⣦⣐⣀⣊⣼⣿⣿⡿⢱⡿⠀⠰⣸⣿⣿⣿⣿⢣⣿⠃⠀⠀⠀⠀
+⠀⠀⠣⣙⠿⣿⣿⣿⣿⣿⣿⠿⢛⣵⡿⠃⢀⢃⣿⣿⣿⣿⡟⣾⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⠈⠛⠶⣮⣭⣭⣴⣶⡿⠿⠋⠀⠀⢨⣘⣿⡻⠿⠿⢇⣿⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⠔⠒⠂⠠⠤⠭⡀⠀⠀⠀⠀⠀⠀⠀⠙⠛⠛⠛⠛⠻⠃⠀⠀⠀⠀⠀⠀
+⢀⠆⠁⠀⡄⠀⠀⠀⠀⠈⢂⠀⠀⠀⠀⠀⠀⠀⠀⢀⡤⠒⠁⠀⠀⠒⢤⡀⠀⠀
+⠣⠤⢤⠞⠂⠀⣀⠰⠃⠀⠘⣆⢀⣀⠀⠀⠀⠀⢀⠎⠀⢠⡀⠀⠀⠀⢀⠀⠙⡀
+⠀⠀⢸⠀⠈⠭⡀⢈⣡⠔⢶⠁⣹⢩⠃⠀⢀⠀⢸⠀⠀⠀⣑⣠⣤⠀⠙⡦⣀⠜
+⠀⠀⠀⠣⠀⢂⠞⠱⠴⣈⡸⠰⢇⠘⠀⠰⡭⠷⢝⡤⣂⣄⠒⢤⡐⠀⠀⡇⠀⠀
+⠀⠀⠀⠀⠱⠄⣀⢜⢁⡠⠥⠊⠀⠀⠀⠀⠡⡘⡄⠐⡂⠘⢌⡀⠉⠂⡸⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠙⠄⠹⢅⣀⠹⠒⠊⠀⠀⠀⠠`;
+        asciiSpan.textContent = rawAscii;
 
         const imgClosed = "closed.png";
         const imgOpen = "open.png";
 
-        function openMouth() {
-            score++;
-            countDisplay.textContent = score;
-            catImage.src = imgOpen;
+        function triggerPop(isOpened) {
+            if (isOpened) {
+                score++;
+                countDisplay.textContent = score;
+                catImage.src = imgOpen;
+
+                if (score === 67 && !hasShown67) {
+                    hasShown67 = true;
+                    popupText.style.display = 'block';
+                    setTimeout(() => {
+                        popupText.style.display = 'none';
+                    }, 1000);
+                }
+                
+                if (score === 4489) {
+                    launchRainbowSprinkler();
+                }
+            } else {
+                catImage.src = imgClosed;
+            }
         }
 
-        function closeMouth() {
-            catImage.src = imgClosed;
+        function launchRainbowSprinkler() {
+            const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#ee82ee'];
+            const x = window.innerWidth / 2;
+            const y = window.innerHeight / 2;
+
+            for (let i = 0; i < 120; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                
+                const angle = Math.random * Math.PI * 2;
+                const distance = 150 + Math.random() * 300;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+
+                document.body.appendChild(particle);
+
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000);
+            }
+        }
+
+        function toggleAutoClick() {
+            if (!isAutoRunning) {
+                let intervalTime = parseInt(intervalInput.value) || 100;
+                if (intervalTime < 10) intervalTime = 10;
+                
+                isAutoRunning = true;
+                autoBtn.textContent = "자동 클릭 정지";
+                intervalInput.disabled = true;
+
+                autoTimer = setInterval(() => {
+                    triggerPop(true);
+                    setTimeout(() => {
+                        triggerPop(false);
+                    }, intervalTime / 2);
+                }, intervalTime);
+            } else {
+                isAutoRunning = false;
+                autoBtn.textContent = "자동 클릭 시작";
+                intervalInput.disabled = false;
+                clearInterval(autoTimer);
+            }
         }
     </script>
 </body>
