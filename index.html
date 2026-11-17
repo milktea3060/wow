@@ -27,16 +27,20 @@
             width: 80vw;
             cursor: pointer;
             -webkit-user-drag: none;
+            -webkit-touch-callout: none;
         }
     </style>
 </head>
 <body>
 
     <h1 id="count">0</h1>
-    <!-- 마우스가 이미지를 벗어날 때(mouseleave)도 입을 다물도록 이벤트 추가 -->
+    <!-- 마우스와 터치, 이미지 영역을 벗어났을 때(mouseleave) 모두 입이 다물어지도록 이벤트 보강 -->
     <img id="popcat" src="closed.png" alt="Popcat" 
-         onmousedown="pop(true)" ontouchstart="pop(true)" 
-         onmouseup="pop(false)" ontouchend="pop(false)" onmouseleave="pop(false)">
+         onmousedown="openMouth()" 
+         onmouseup="closeMouth()" 
+         onmouseleave="closeMouth()"
+         ontouchstart="openMouth()" 
+         ontouchend="closeMouth()">
 
     <script>
         let score = 0;
@@ -46,14 +50,14 @@
         const imgClosed = "closed.png";
         const imgOpen = "open.png";
 
-        function pop(isOpened) {
-            if (isOpened) {
-                score++;
-                countDisplay.textContent = score;
-                catImage.src = imgOpen;
-            } else {
-                catImage.src = imgClosed;
-            }
+        function openMouth() {
+            score++;
+            countDisplay.textContent = score;
+            catImage.src = imgOpen;
+        }
+
+        function closeMouth() {
+            catImage.src = imgClosed;
         }
     </script>
 </body>
