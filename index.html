@@ -12,9 +12,9 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #141414;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #141414;
+            font-family: "굴림", Gulim, "맑은 고딕", "Malgun Gothic", sans-serif;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -34,7 +34,6 @@
 <body>
 
     <h1 id="count">0</h1>
-    <!-- 마우스와 터치, 이미지 영역을 벗어났을 때(mouseleave) 모두 입이 다물어지도록 이벤트 보강 -->
     <img id="popcat" src="closed.png" alt="Popcat" 
          onmousedown="openMouth()" 
          onmouseup="closeMouth()" 
