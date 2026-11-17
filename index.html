@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Popcat</title>
+    <title>My Popcat</title>
     <style>
         body {
             margin: 0;
@@ -33,16 +33,16 @@
 <body>
 
     <h1 id="count">0</h1>
-    <img id="popcat" src="https://i.imgur.com/7X563k7.png" alt="Popcat Closed" onclick="pop(true)" ontouchstart="pop(true)" onmouseup="pop(false)" ontouchend="pop(false)">
+    <!-- 초기 이미지를 closed.png로 설정 -->
+    <img id="popcat" src="closed.png" alt="Popcat" onclick="pop(true)" ontouchstart="pop(true)" onmouseup="pop(false)" ontouchend="pop(false)">
 
     <script>
         let score = 0;
         const countDisplay = document.getElementById('count');
         const catImage = document.getElementById('popcat');
 
-        // 입 벌린 이미지와 다문 이미지 (Imgur 링크 등 활용)
-        const imgClosed = "https://i.imgur.com/7X563k7.png";
-        const imgOpen = "https://i.imgur.com/9563k7.png"; // 실제 팝켓 오픈 이미지 URL로 교체 가능
+        const imgClosed = "closed.png";
+        const imgOpen = "open.png";
 
         function pop(isOpened) {
             if (isOpened) {
