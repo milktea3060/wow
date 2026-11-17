@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Popcat</title>
+    <title>Popcat</title>
     <style>
         body {
             margin: 0;
@@ -33,8 +33,10 @@
 <body>
 
     <h1 id="count">0</h1>
-    <!-- 초기 이미지를 closed.png로 설정 -->
-    <img id="popcat" src="closed.png" alt="Popcat" onclick="pop(true)" ontouchstart="pop(true)" onmouseup="pop(false)" ontouchend="pop(false)">
+    <!-- 마우스가 이미지를 벗어날 때(mouseleave)도 입을 다물도록 이벤트 추가 -->
+    <img id="popcat" src="closed.png" alt="Popcat" 
+         onmousedown="pop(true)" ontouchstart="pop(true)" 
+         onmouseup="pop(false)" ontouchend="pop(false)" onmouseleave="pop(false)">
 
     <script>
         let score = 0;
